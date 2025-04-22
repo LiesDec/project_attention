@@ -1,0 +1,9 @@
+Metadata-Version: 2.2
+Name: project_attention
+Version: 0.0.0
+Summary: Farrow Lab project Lies D.
+Author: Lies Deceuninck
+Author-email: Lies.deceuninck@nerf.be
+Dynamic: author
+Dynamic: author-email
+Dynamic: summary

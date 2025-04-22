@@ -1,0 +1,8 @@
+README.md
+setup.py
+attentionAnalyses/utilities.py
+project_attention.egg-info/PKG-INFO
+project_attention.egg-info/SOURCES.txt
+project_attention.egg-info/dependency_links.txt
+project_attention.egg-info/not-zip-safe
+project_attention.egg-info/top_level.txt
