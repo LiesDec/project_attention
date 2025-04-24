@@ -128,6 +128,8 @@ def analyze(
                         path_str[start_index:end_index]
                         + f"fUSi/{session_data[session_name]['sessionType']}/{dir_name}"
                     )
+                    session_data[session_name]["include"] = True
+                    session_data[session_name]["includeNotes"] = ""
 
                     context.log.info(f"Loaded session {session_name} from {mouseID}")
 

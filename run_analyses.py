@@ -93,12 +93,15 @@ def main():
             sessions = args.sessions
 
         for session in sessions:
-            if "stimFileAnalysis" in args.analysis:
-                mouse_context.run(
-                    ".stimFileAnalysis",
-                    parameters=dict(session=session),
-                    if_not_since=args.ifNotSince,
-                )
+            if overview.loc[overview["session"] == session, "include"].values[0]:
+                if "stimFileAnalysis" in args.analysis:
+                    mouse_context.run(
+                        ".stimFileAnalysis",
+                        parameters=dict(session=session),
+                        if_not_since=args.ifNotSince,
+                    )
+            else:
+                mouse_context.log.info(f"session {session} not inlcuded in dataset")
 
 
 if __name__ == "__main__":

@@ -78,6 +78,7 @@ def analyze(
     )
     # Restore original logging level
     logger.setLevel(previous_level)
+
     triggers = np.load(
         Path.joinpath(
             root_path, overview[overview["session"] == session]["TriggerPath"].values[0]
@@ -88,7 +89,18 @@ def analyze(
 
     # Read ball camera data
     ballCamData = np.array(stimData["BallCamData"])
-    time = ballCamData[:, 0] / 1000  # ms to s
+    try:
+        time = ballCamData[:, 0] / 1000  # ms to s
+    except Exception as e:
+        data = {"error": e}
+        fklab.utilities.data.map_to_hdf5(context.result, data)
+        overview.loc[overview["session"] == session, "include"] = False
+        overview.loc[
+            overview["session"] == session, "includeNotes"
+        ] = "No valid ballCamData saved"
+        overview.to_csv(overview_file, index=False)
+        context.log.info("no ballCamData saved, session invalid")
+        return
 
     # Align camera data to trigger length #SOL1
     diff = len(time) - len(trigT)
@@ -158,6 +170,7 @@ def analyze(
         if (
             (len(trigT) <= end)
             or (len(trigT) <= start)
+            or (start < 0)
             or (trigT[start] < time[0])
             or (trigT[end] > time[-1])
         ):  # SOL4
@@ -168,7 +181,9 @@ def analyze(
         # save if trial is rewarded or non-rewarded, otherwise discard
         stimulusLocation = stimData["stimLocationHistoryPX"][n]
 
-        if any(
+        if stimData["RewardMode"] == 0:
+            nonRewardedTrials.append(n)
+        elif any(
             (stimulusLocation == sublist).all()
             for sublist in [[475.0, 230.0, 525.0, 280.0], [227.0, 230.0, 277.0, 280.0]]
         ):
@@ -188,7 +203,7 @@ def analyze(
 
         trialSegTrigT.append([trigT[start], trigT[end]])
 
-        for i, b in enumerate([np.array(triggers[0]), forward, turn, lateral]):
+        for i, b in enumerate([np.array(trigT), forward, turn, lateral]):
             behaviorData[i, :, n] = b[start:end] * frameRate
 
         # Lick data aligned to stim start
@@ -242,6 +257,11 @@ def analyze(
         "behaviorData": behaviorData,
         "lickData": licksDataTrials,
         "nTrialsLostAtEnd": np.sum(noBallCamDataTrials),
+        "rewardedTrials": rewardedTrials,
+        "nonRewardedTrials": nonRewardedTrials,
+        "nSubsessions": stimData["subsessions"],
+        "nTrialsPerSubsession": len(stimData["options"]["tsecbegin"])
+        / stimData["subsessions"],
     }
     fklab.utilities.data.map_to_hdf5(context.result, data)
 
@@ -250,8 +270,11 @@ def visualize(context, session, dpi=150):
     import seaborn as sns
     import matplotlib.pyplot as plt
 
-    behaviorData = context.result["behaviorData"]
-    lickData = context.result["lickData"]
+    try:
+        behaviorData = context.result["behaviorData"]
+        lickData = context.result["lickData"]
+    except Exception as e:
+        return
 
     fig, axs = plt.subplots(
         1, 2, figsize=(12, 5), sharey=True, width_ratios=[1.2, 1], layout="tight"
@@ -335,3 +358,4 @@ def visualize(context, session, dpi=150):
         fig,
         dpi=dpi,
     )
+    plt.close()
