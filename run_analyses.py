@@ -44,7 +44,11 @@ def main():
     )
 
     parser.add_argument(
-        "--analysis", type=str, nargs="*", default=["all"], help="analyses to run"
+        "--analysis",
+        type=str,
+        nargs="*",
+        default=["all"],
+        help="analyses to run, options: [create_overview, stimFileAnalysis, velocityAnalysis] ",
     )
 
     parser.add_argument(

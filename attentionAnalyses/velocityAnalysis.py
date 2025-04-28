@@ -33,9 +33,10 @@ def analyze(context, session, statistic="median"):
     rewardedTrials = stimFileAnalysisResult["rewardedTrials"]
     nonRewardedTrials = stimFileAnalysisResult["nonRewardedTrials"]
     nonValidTrials = stimFileAnalysisResult["nonValidTrials"]
+    noBallCamTrials = stimFileAnalysisResult["noBallCamDataTrials"]
 
     movement = np.linalg.norm(
-        behaviorData[1:, :, :], axis=0
+        behaviorData[1:3, :, :], axis=0
     )  # size of the total movement vector (cm/s)
 
     # Calculate average speed in selected timewindows for different categories
@@ -48,13 +49,18 @@ def analyze(context, session, statistic="median"):
         np.arange(0, nTrialsPerSubsession + i * nTrialsPerSubsession)
         for i in np.arange(0, nSubSessions)
     ]
-    # exclued invalid trials:
+    # exclued invalid trials and end trials where no ballCam data was recorded:
     for i in range(len(trialCategoriesIndices)):
         trialCategoriesIndices[i] = [
-            t for t in trialCategoriesIndices[i] if t not in nonValidTrials
+            int(t) for t in trialCategoriesIndices[i] if t not in nonValidTrials
         ]
+    for i in range(len(trialCategoriesIndices)):
+        trialCategoriesIndices[i] = [
+            int(t) for t in trialCategoriesIndices[i] if t not in noBallCamTrials
+        ]
+
     timeWindows = ["baseline", "3sPreStim", "stim", "3sPostStim", "aftermath"]
-    timeWindowsSeconds = [
+    timeWindowsFrames = [
         [0, secondsBefore * frameRate],
         [3 * frameRate, secondsBefore * frameRate],
         [secondsBefore * frameRate, (secondsBefore + 3) * frameRate],
@@ -65,7 +71,7 @@ def analyze(context, session, statistic="median"):
     avMovementT = {}
     avSpeed = {}
     avMovement = {}
-    for timeWindow, t in zip(timeWindows, timeWindowsSeconds):
+    for timeWindow, t in zip(timeWindows, timeWindowsFrames):
         avSpeedT[timeWindow] = {}
         avMovementT[timeWindow] = {}
         avSpeed[timeWindow] = {}
@@ -82,7 +88,7 @@ def analyze(context, session, statistic="median"):
                 avMovementT[timeWindow][cat]
             )
     data = {
-        "sessionType": stimFileAnalysisResult["sessionType"].encode(),
+        "sessionType": stimFileAnalysisResult["sessionType"][()],
         "averageSpeedPerTrial": avSpeedT,
         "averageMovementPerTrial": avMovementT,
         "averageSpeed": avSpeed,
@@ -91,11 +97,14 @@ def analyze(context, session, statistic="median"):
     fklab.utilities.data.map_to_hdf5(context.result, data)
 
 
-def visualise(context, session):
+def visualize(context, session, dpi=150):
     import seaborn as sns
+    import matplotlib.pyplot as plt
+    from attentionAnalyses import plot_styles_and_colors
 
     speed = context.result["averageSpeedPerTrial"]
     movement = context.result["averageMovementPerTrial"]
+    sessionType = context.result["sessionType"][()].decode()
 
     rows = []
 
@@ -109,7 +118,7 @@ def visualise(context, session):
                     {
                         "timeWindow": timeWindow,
                         "trialCategory": cat,
-                        "median speed (cm/s)": speed_val,
+                        "median forward speed (cm/s)": speed_val,
                         "median movement (cm/s)": movement_val,
                     }
                 )
@@ -120,37 +129,55 @@ def visualise(context, session):
     fig1, ax1 = plt.subplots()
     sns.stripplot(
         x="timeWindow",
-        y="median speed (cm/s)",
+        y="median forward speed (cm/s)",
+        order=["baseline", "3sPreStim", "stim", "3sPostStim", "aftermath"],
         hue="trialCategory",
         data=df_long[df_long["trialCategory"].isin(["rewarded", "unrewarded"])],
+        dodge=True,
         legend=False,
+        size=3,
         alpha=0.5,
         ax=ax1,
+        palette=["black", "black"],
+        hue_order=["rewarded", "unrewarded"],
     )
     sns.boxplot(
         x="timeWindow",
-        y="median speed (cm/s)",
+        y="median forward speed (cm/s)",
+        order=["baseline", "3sPreStim", "stim", "3sPostStim", "aftermath"],
         hue="trialCategory",
         data=df_long[df_long["trialCategory"].isin(["rewarded", "unrewarded"])],
         ax=ax1,
+        fliersize=0.001,
+        palette=[sessionType, "lightgrey"],
+        hue_order=["rewarded", "unrewarded"],
     )
 
     fig2, ax2 = plt.subplots()
     sns.stripplot(
         x="timeWindow",
-        y="median speed (cm/s)",
+        y="median movement (cm/s)",
+        order=["baseline", "3sPreStim", "stim", "3sPostStim", "aftermath"],
         hue="trialCategory",
         data=df_long[df_long["trialCategory"].isin(["rewarded", "unrewarded"])],
+        dodge=True,
         legend=False,
+        size=3,
         alpha=0.5,
         ax=ax2,
+        palette=["black", "black"],
+        hue_order=["rewarded", "unrewarded"],
     )
     sns.boxplot(
         x="timeWindow",
-        y="median speed (cm/s)",
+        y="median movement (cm/s)",
+        order=["baseline", "3sPreStim", "stim", "3sPostStim", "aftermath"],
         hue="trialCategory",
         data=df_long[df_long["trialCategory"].isin(["rewarded", "unrewarded"])],
         ax=ax2,
+        fliersize=0.001,
+        palette=[sessionType, "lightgrey"],
+        hue_order=["rewarded", "unrewarded"],
     )
 
     context.io.save_fig(
