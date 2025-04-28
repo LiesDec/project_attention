@@ -124,6 +124,7 @@ def analyze(
 
     # filter out trials where ballcamdata was not recorded #SOL2
     noBallCamDataTrials = stimStartSec < time[-1]
+    noBallCamDataTrialsIdx = np.arange(len(stimStartSec))[~noBallCamDataTrials]
     stimStartSec = stimStartSec[noBallCamDataTrials]
     stimStartSecPerTrial = stimStartSecPerTrial[: len(stimStartSec)]
 
@@ -254,6 +255,7 @@ def analyze(
         .encode(),
         "trialSeg": trialSegTrigT,
         "nonValidTrials": nonValidTrials,
+        "noBallCamDataTrials": noBallCamDataTrialsIdx,
         "behaviorData": behaviorData,
         "lickData": licksDataTrials,
         "nTrialsLostAtEnd": np.sum(noBallCamDataTrials),
@@ -285,7 +287,7 @@ def visualize(context, session, dpi=150):
         xticklabels=False,
         yticklabels=25,
         ax=axs[0],
-        cbar_kws={"label": "Velocity (cm/s)"},
+        cbar_kws={"label": "Forward Velocity (cm/s)"},
     )
 
     # axs[1].hlines(
@@ -359,3 +361,23 @@ def visualize(context, session, dpi=150):
         dpi=dpi,
     )
     plt.close()
+
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5), sharey=True, layout="tight")
+
+    sns.heatmap(
+        behaviorData[2, :, :].T,
+        cmap="RdBu_r",
+        xticklabels=False,
+        yticklabels=25,
+        ax=axs[0],
+        cbar_kws={"label": "Sidewards Velocity (cm/s)"},
+    )
+
+    sns.heatmap(
+        behaviorData[2, :, :].T,
+        cmap="RdBu_r",
+        xticklabels=False,
+        yticklabels=25,
+        ax=axs[1],
+        cbar_kws={"label": "headdirection (degrees/s)"},
+    )
