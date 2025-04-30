@@ -120,16 +120,19 @@ def analyze(
                     ]
                     if len(camFiles) == 0:
                         session_data[session_name]["CamPath"] = "None"
+                        session_data[session_name]["include"] = False
+                        session_data[session_name]["includeNotes"] = "no video file"
                     else:
                         session_data[session_name]["CamPath"] = os.path.join(
                             camFolderPath[start_index:], camFiles[0]
                         )
+                        session_data[session_name]["include"] = True
+                        session_data[session_name]["includeNotes"] = ""
+
                     session_data[session_name]["FusiPath"] = (
                         path_str[start_index:end_index]
                         + f"fUSi/{session_data[session_name]['sessionType']}/{dir_name}"
                     )
-                    session_data[session_name]["include"] = True
-                    session_data[session_name]["includeNotes"] = ""
 
                     context.log.info(f"Loaded session {session_name} from {mouseID}")
 
