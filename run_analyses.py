@@ -110,7 +110,7 @@ def main():
                         parameters=dict(session=session),
                         if_not_since=args.ifNotSince,
                     )
-                if "dlcAnalysis" in arg.analysis:
+                if "dlcAnalysis" in args.analysis:
                     mouse_context.run(
                         ".dlcAnalysis",
                         parameters=dict(session=session),

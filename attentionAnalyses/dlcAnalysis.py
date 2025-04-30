@@ -2,6 +2,9 @@ import paramiko
 from fklab.analysis.core.analysis_io import get_analysis_path
 from fklab.analysis.core.analysis_io import get_tag_path
 from fklab.analysis.core.analysis_io import get_version_path
+import os
+import json
+import pandas as pd
 
 info = dict(version=0.1, tags=["session"])
 
@@ -38,15 +41,15 @@ def analyze(
     clusterPassword="VarcSomnQelu6(",
     root="/mnt/farrowlab/farrowlabwip2024/",
     json_file="/mnt/farrowlab/farrowlabwip2024/User/Lies/DLC/DLC_params_analyse.json",
-    out_directory="home/liesd-farrowlab/DLC",
+    out_directory="/home/liesd-farrowlab/DLC",
     user_email="deceun56@imec.be",
 ):
     mID = context.levels["mouseID"]
 
     # get paths for bashfile
-    analysis_path = get_analysis_path(context.datasources["raw"], "run_dlc")
+    analysis_path = get_analysis_path(context.datasources["raw"], "dlcAnalysis")
     tag_path, _ = get_tag_path(analysis_path, context.config.tags)
-
+    
     version_path, version = get_version_path(tag_path, None, action="exist")
 
     bash_path_local = os.path.join(version_path, "bash.sh")
@@ -68,13 +71,12 @@ def analyze(
     overview_file = context.datasources["raw"].joinpath(f"overviewSessions{mID}.csv")
     overview = pd.read_csv(overview_file)
 
-    print(overview)
     videoPath = os.path.join(
         root,
         overview[overview["session"] == session]["CamPath"].values[0],
     )
-    analyseParams["Videos"] = [videoPath]
-    analyseParams["AnalyzeVideo"]["destfolder"] = version_path
+    analyseParams["Videos"] = [str(videoPath)]
+    analyseParams["AnalyzeVideo"]["destfolder"] = str(version_path)
     # Serializing json
     with open(os.path.join(version_path, "DLC_params_analyse.json"), "w") as outfile:
         json.dump(analyseParams, outfile)
@@ -97,15 +99,15 @@ def analyze(
 
     commands = [f"bash {bash_path_nerfcluster}"]
 
-    # client = initialize_client(clusterNode, clusterUser, clusterPassword)
+    client = initialize_client(clusterNode, clusterUser, clusterPassword)
 
-    # cluster_jobs.execute_commands(client, commands)
+    cluster_jobs.execute_commands(client, commands)
 
-    # while not os.path.exists(os.path.join(server_local, raw_path, 'done.txt')):
-    #     # Check that nerfcluster job is still running
-    #     commands = [
-    #         f"squeue"
-    #     ]
-    #     nerfcluster_jobs.execute_commands(client, commands)
-    #     print("Waiting for file to be created")
-    #     time.sleep(60*5)
+    while not os.path.exists(os.path.join(server_local, raw_path, 'done.txt')):
+    #     #Check that nerfcluster job is still running
+      commands = [
+             f"squeue"
+         ]
+         nerfcluster_jobs.execute_commands(client, commands)
+         ("Waiting for file to be created")
+         time.sleep(60*5)
