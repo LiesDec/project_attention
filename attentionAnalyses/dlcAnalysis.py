@@ -43,6 +43,7 @@ def analyze(
 ):
     mID = context.levels["mouseID"]
 
+    # get paths for bashfile
     analysis_path = get_analysis_path(context.datasources["raw"], "run_dlc")
     tag_path, _ = get_tag_path(analysis_path, context.config.tags)
 
@@ -55,14 +56,37 @@ def analyze(
 
     bash_path_nerfcluster = root + bash_path_local_str[start_index:]
 
+    # make session directory to store output dlc
     os.mkdir(os.path.join(out_directory, session))
 
-    # Make and save the bash file that will run suite2p on the cluster
+    # create dlc_analysis json file
+    with open(
+        os.path.join(root, "User/Lies/DLC/DLC_params_analyse.json"), "r"
+    ) as openfile:
+        analyseParams = json.load(openfile)
+    # find video path
+    overview_file = context.datasources["raw"].joinpath(f"overviewSessions{mID}.csv")
+    overview = pd.read_csv(overview_file)
+
+    print(overview)
+    videoPath = os.path.join(
+        root,
+        overview[overview["session"] == session]["CamPath"].values[0],
+    )
+    analyseParams["Videos"] = [videoPath]
+    analyseParams["AnalyzeVideo"]["destfolder"] = version_path
+    # Serializing json
+    with open(os.path.join(version_path, "DLC_params_analyse.json"), "w") as outfile:
+        json.dump(analyseParams, outfile)
+
+    # Make and save the bash file that will run deeplabcut on the cluster
     with open(bash_path_local, "w", newline="\n") as bash_file:
         bash_file.write("#!/bin/bash\n")
         bash_file.write("set -e\n")
         bash_file.write("nerf_deeplabcut_launch_slurm.py")
-        bash_file.write(f"   --input_json_file {json_file}")
+        bash_file.write(
+            f"   --input_json_file {os.path.join(version_path, 'DLC_params_analyse.json')}"
+        )
         bash_file.write(f"   --out_directory {os.path.join(out_directory,session)}")
         bash_file.write(f"   --program_to_run analysis")
         bash_file.write(f"   --job_name {mID}/{session}")
@@ -72,6 +96,7 @@ def analyze(
         bash_file.close()
 
     commands = [f"bash {bash_path_nerfcluster}"]
+
     # client = initialize_client(clusterNode, clusterUser, clusterPassword)
 
     # cluster_jobs.execute_commands(client, commands)

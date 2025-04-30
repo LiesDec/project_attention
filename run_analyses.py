@@ -110,6 +110,12 @@ def main():
                         parameters=dict(session=session),
                         if_not_since=args.ifNotSince,
                     )
+                if "dlcAnalysis" in arg.analysis:
+                    mouse_context.run(
+                        ".dlcAnalysis",
+                        parameters=dict(session=session),
+                        if_not_since=args.ifNotSince,
+                    )
             else:
                 mouse_context.log.info(f"session {session} not inlcuded in dataset")
 
