@@ -1,0 +1,11 @@
+*.py[cod]
+*.so
+*.egg-info
+*.idea
+__pycache__
+build
+.project
+*htmlcov*
+*.coverage.*
+tests/.coverage
+*.hypothesis*
