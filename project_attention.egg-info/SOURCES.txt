@@ -1,6 +1,11 @@
 README.md
+setup.cfg
 setup.py
+attentionAnalyses/create_overview.py
+attentionAnalyses/plot_styles_and_colors.py
+attentionAnalyses/stimFileAnalysis.py
 attentionAnalyses/utilities.py
+attentionAnalyses/velocityAnalysis.py
 project_attention.egg-info/PKG-INFO
 project_attention.egg-info/SOURCES.txt
 project_attention.egg-info/dependency_links.txt

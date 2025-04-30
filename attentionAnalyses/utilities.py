@@ -392,8 +392,6 @@ def get_files_path(
 
         # Prepend root if needed, and store
         for fileType in fileTypes:
-            print(fileType)
-            print(overview[fileType])
             mouse_paths = [
                 root + p for p in overview[fileType][~overview[fileType].isna()]
             ]
