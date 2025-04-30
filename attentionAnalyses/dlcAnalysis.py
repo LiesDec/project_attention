@@ -49,7 +49,7 @@ def analyze(
     # get paths for bashfile
     analysis_path = get_analysis_path(context.datasources["raw"], "dlcAnalysis")
     tag_path, _ = get_tag_path(analysis_path, context.config.tags)
-    
+
     version_path, version = get_version_path(tag_path, None, action="exist")
 
     bash_path_local = os.path.join(version_path, "bash.sh")
@@ -103,11 +103,9 @@ def analyze(
 
     cluster_jobs.execute_commands(client, commands)
 
-    while not os.path.exists(os.path.join(server_local, raw_path, 'done.txt')):
-    #     #Check that nerfcluster job is still running
-      commands = [
-             f"squeue"
-         ]
-         nerfcluster_jobs.execute_commands(client, commands)
-         ("Waiting for file to be created")
-         time.sleep(60*5)
+    # while not os.path.exists(os.path.join(server_local, raw_path, "done.txt")):
+    #     #     #Check that nerfcluster job is still running
+    #     commands = [f"squeue"]
+    #     nerfcluster_jobs.execute_commands(client, commands)
+    #     ("Waiting for file to be created")
+    #     time.sleep(60 * 5)
